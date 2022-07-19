@@ -15,11 +15,11 @@
     </div>
 
     <div id="email-view">
-        
+
     </div>
 
     <div id="compose-view">
-        <h3>New Email</h3>
+        <h3 id="compose-heading">New Email</h3>
         <form id="compose-form">
             <div class="form-group">
                 From: <input disabled class="form-control" value="{{ request.user.email }}">
@@ -27,8 +27,11 @@
             <div class="form-group">
                 To: <input id="compose-recipients" class="form-control">
             </div>
-            <div class="form-group">
+            <div id="subject-div" class="form-group">
                 <input class="form-control" id="compose-subject" placeholder="Subject">
+            </div>
+            <div id="og-div" class="form-group">
+                <text class="form-control" id="og-text"></text>
             </div>
             <textarea class="form-control" id="compose-body" placeholder="Body"></textarea>
             <input type="submit" class="btn btn-primary"/>

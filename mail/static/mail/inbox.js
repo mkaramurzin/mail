@@ -24,8 +24,12 @@ function compose_email() {
 
   // Clear out composition fields
   document.querySelector('#compose-recipients').value = '';
+  document.querySelector('#compose-recipients').disabled = false;
   document.querySelector('#compose-subject').value = '';
+  document.querySelector('#compose-subject').disabled = false;
   document.querySelector('#compose-body').value = '';
+  document.querySelector('#og-text').innerHTML = '';
+  document.querySelector('#og-text').style.display = 'none';
 }
 
 function load_mailbox(mailbox) {
@@ -111,7 +115,9 @@ function view_email(email_id) {
     let timestamp = document.createElement('div');
     let text = document.createElement('div');
     let hr = document.createElement('hr');
+    let button_div = document.createElement('div');
     let reply = document.createElement('button');
+    let archive = document.createElement('button');
 
     from.innerHTML = `<strong>From:</strong> ${email['sender']}`;
     to.innerHTML = `<strong>To:</strong> ${email['recipients'].join(", ")}`;
@@ -119,18 +125,62 @@ function view_email(email_id) {
     timestamp.innerHTML = `<strong>Timestamp:</strong> ${email['timestamp']}`;
     text.innerHTML = email['body'];
 
+
+    archive.className = 'btn btn-secondary';
+    if(email['archived']) {
+      archive.innerHTML = 'Un-Archive';
+    } else {
+      archive.innerHTML = 'Archive';
+    }
+    button_div.append(archive);
+    archive.addEventListener('click', () => {
+      fetch(`emails/${email['id']}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          archived: !email['archived']
+        })
+      })
+      .then( () => load_mailbox('inbox'));
+    })
+
     reply.className = 'btn btn-primary';
     reply.innerHTML = 'Reply';
+    reply.style.marginLeft = '5px';
+    button_div.append(reply);
     reply.addEventListener('click', () => {
       reply.style.display = 'none';
-      reply_email(email);
+
+      // Taken to composition view for reply
+      document.querySelector('#emails-view').style.display = 'none';
+      document.querySelector('#compose-view').style.display = 'block';
+      document.querySelector('#email-view').style.display = 'none';
+
+      // Fill out composition fields
+      document.querySelector('#compose-heading').innerHTML = 'Reply';
+      document.querySelector('#compose-subject').value = '';
+      document.querySelector('#compose-recipients').value = email['sender'];
+      document.querySelector('#compose-recipients').disabled = true;
+
+      let reply_subject = email['subject'];
+      if(reply_subject.slice(0, 3) === 'Re:') {
+        document.querySelector('#compose-subject').value = email['subject'];
+      } else {
+        document.querySelector('#compose-subject').value = 'Re: ' + email['subject'];
+      }
+      document.querySelector('#compose-subject').disabled = true;
+
+      document.querySelector('#compose-body').value = '';
+
+      let og_text = document.querySelector('#og-text');
+      og_text.style.display = 'block';
+      og_text.innerHTML = `On ${email['timestamp']} ${email['sender']} wrote: ${email['body']}`;
     });
 
     document.querySelector('#email-view').append(from);
     document.querySelector('#email-view').append(to);
     document.querySelector('#email-view').append(subject);
     document.querySelector('#email-view').append(timestamp);
-    document.querySelector('#email-view').append(reply)
+    document.querySelector('#email-view').append(button_div);
     document.querySelector('#email-view').append(hr);
     document.querySelector('#email-view').append(text);
 
@@ -179,34 +229,4 @@ function send_email() {
             console.log(error);
         });
   return false;
-}
-
-function reply_email(email) {
-  const form = document.createElement('form');
-
-  const form_div = document.createElement('div');
-
-  const text_area = document.createElement('textarea');
-  text_area.style.width = '60%';
-  text_area.style.height = '100px';
-  text_area.style.resize = 'none';
-  text_area.style.display = 'block';
-  text_area.style.marginTop = '40px';
-  text_area.style.padding = '15px';
-  text_area.autofocus = true;
-
-  const send = document.createElement('button')
-  send.innerHTML = 'Send';
-  send.className = 'btn btn-primary'
-
-  form.appendChild(text_area);
-  form.appendChild(send);
-  // form_div.appendChild(form);
-
-  document.querySelector('#email-view').append(form);
-  text_area,autofocus = true;
-
-  form.addEventListener('submit', () => {
-    
-  });
 }
